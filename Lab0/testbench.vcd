@@ -1,0 +1,142 @@
+$date
+	Sat Mar 25 16:18:56 2023
+$end
+$version
+	Icarus Verilog
+$end
+$timescale
+	1ps
+$end
+$scope module testbench $end
+$var wire 1 ! diff $end
+$var wire 1 " bout $end
+$var reg 1 # a $end
+$var reg 1 $ b $end
+$var reg 1 % bin $end
+$var reg 1 & clk $end
+$var reg 1 ' correct $end
+$var reg 9 ( golden_borrow [8:0] $end
+$var reg 9 ) golden_diff [8:0] $end
+$var integer 32 * counter [31:0] $end
+$scope module FSUB $end
+$var wire 1 % Borrow_in $end
+$var wire 1 " Borrow_out $end
+$var wire 1 # In_A $end
+$var wire 1 $ In_B $end
+$var wire 1 ! Difference $end
+$var wire 1 + D $end
+$var wire 1 , B2 $end
+$var wire 1 - B1 $end
+$scope module HSUB1 $end
+$var wire 1 - Borrow_out $end
+$var wire 1 + Difference $end
+$var wire 1 # In_A $end
+$var wire 1 $ In_B $end
+$var wire 1 . tmp $end
+$upscope $end
+$scope module HSUB2 $end
+$var wire 1 , Borrow_out $end
+$var wire 1 ! Difference $end
+$var wire 1 + In_A $end
+$var wire 1 % In_B $end
+$var wire 1 / tmp $end
+$upscope $end
+$upscope $end
+$upscope $end
+$enddefinitions $end
+#0
+$dumpvars
+1/
+1.
+0-
+0,
+0+
+b0 *
+b10010110 )
+b10001110 (
+1'
+0&
+0%
+0$
+0#
+0"
+0!
+$end
+#5000000000000
+b1 *
+1&
+#10000000000000
+1"
+1!
+1,
+0&
+1%
+#15000000000000
+b10 *
+1&
+#20000000000000
+0/
+0,
+1+
+1-
+0&
+0%
+1$
+#25000000000000
+b11 *
+1&
+#30000000000000
+0!
+0&
+1%
+#35000000000000
+b100 *
+1&
+#40000000000000
+0"
+1!
+0-
+0.
+0&
+0%
+0$
+1#
+#45000000000000
+b101 *
+1&
+#50000000000000
+0!
+0&
+1%
+#55000000000000
+b110 *
+1&
+#60000000000000
+1/
+0+
+0&
+0%
+1$
+#65000000000000
+b111 *
+1&
+#70000000000000
+1"
+1!
+1,
+0&
+1%
+#75000000000000
+b1000 *
+1&
+#80000000000000
+0"
+0!
+0,
+1.
+0&
+0%
+0$
+0#
+#85000000000000
+1&
