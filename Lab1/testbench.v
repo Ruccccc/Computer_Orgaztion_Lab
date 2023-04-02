@@ -113,23 +113,23 @@ always@(negedge clk) begin
 			end
 			else begin
 				error_count <= error_count + 6'd1;
+            $display("***************************************************");    
+            
+            case(mem_opcode[pattern_count-2])
+            4'd0:$display( " AND ");                  
+            4'd1:$display( " OR ");
+            4'd2:$display( " ADD ");
+            4'd6:$display( " SUB ");
+            4'd7:$display( " SLT ");
+            4'd12:$display(" NOR ");
+            default: begin
+            end
+            endcase
+            $display(" No.%2d ",pattern_count-1);
+            $display(" Currect result: %b     Currect ZCV: %b",result_correct, zcv_correct[3-1:0]);
+            $display(" Your result:    %b     Your ZCV: %b\n",result_out, zcv_out);
+            $display("***************************************************");    
 			end
-         $display("***************************************************");    
-         
-         case(mem_opcode[pattern_count-2])
-         4'd0:$display( " AND ");                  
-         4'd1:$display( " OR ");
-         4'd2:$display( " ADD ");
-         4'd6:$display( " SUB ");
-         4'd7:$display( " SLT ");
-         4'd12:$display(" NOR ");
-         default: begin
-         end
-         endcase
-         $display(" No.%2d ",pattern_count-1);
-         $display(" Currect result: %b     Currect ZCV: %b",result_correct, zcv_correct[3-1:0]);
-         $display(" Your result:    %b     Your ZCV: %b\n",result_out, zcv_out);
-         $display("***************************************************");    
 	end
 end
 
