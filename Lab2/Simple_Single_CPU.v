@@ -20,19 +20,19 @@ input         rst_i;
 
 //Internal Signles
 
-wire [32-1:0] pc1, pc2, pc3, pc4; // program count // pc2 -> pc1 + 4 // pc3 -> pc2 + offset // pc4 -> mux pc2, pc3
+wire [32-1:0] pc1, pc2, pc3, pc4; // program count // p1 +4 --> p2  +offset --> p3  // mux p2, p3 --> p4 --> p1
 wire [32-1:0] instr;              // instrction
 wire  [3-1:0] ALUop;
-wire          RegDst;
-wire          RegWrite;
-wire          ALUsrc;
-wire          branch;
-wire  [5-1:0] Write_reg;
-wire  [4-1:0] ALUctrl;
-wire [32-1:0] extended, extended_and_shifted;
-wire [32-1:0] rs, rt, src2;
-wire [32-1:0] ALU_result;
-wire          ALU_Zero;
+wire          RegDst;             // Write rt or rd.
+wire          RegWrite;           // Write register or not.
+wire          ALUsrc;             // From register or instruction.
+wire          branch;             // branch or not.
+wire  [5-1:0] Write_reg;          // the register being write. (rt or rd)
+wire  [4-1:0] ALUctrl;            // ALU control for ALU.
+wire [32-1:0] extended, shifted;  // instruction[15:0] --> (extend to 32 bits) --> extended --> (shift left 2) --> shiifted.
+wire [32-1:0] src1, rt, src2;     // rs // rt // mux extended, rt --> src2.
+wire [32-1:0] ALU_result;         // Result of ALU.
+wire          ALU_Zero;           // Result is zero.
 
 //Greate componentes
 ProgramCounter PC(
@@ -42,7 +42,7 @@ ProgramCounter PC(
 	.pc_out_o(pc1)
 	);
 	
-Adder Adder1(            // pc + 4
+Adder Adder1(
         .src1_i(pc1),
 	.src2_i(32'd4),
 	.sum_o(pc2)
@@ -51,6 +51,15 @@ Adder Adder1(            // pc + 4
 Instr_Memory IM(
         .pc_addr_i(pc1),
 	.instr_o(instr)
+	);
+	
+Decoder Decoder(
+        .instr_op_i(instr[31:26]),
+	.RegWrite_o(RegWrite),
+	.ALU_op_o(ALUop),
+	.ALUSrc_o(ALUsrc),
+	.RegDst_o(RegDst),
+	.Branch_o(branch)
 	);
 
 MUX_2to1 #(.size(5)) Mux_Write_Reg(
@@ -68,18 +77,9 @@ Reg_File RF(
         .RDaddr_i(Write_reg),
         .RDdata_i(ALU_result),
         .RegWrite_i(RegWrite),
-        .RSdata_o(rs),
+        .RSdata_o(src1),
         .RTdata_o(rt)
         );
-	
-Decoder Decoder(
-        .instr_op_i(instr[31:26]),
-	.RegWrite_o(RegWrite),
-	.ALU_op_o(ALUop),
-	.ALUSrc_o(ALUsrc),
-	.RegDst_o(RegDst),
-	.Branch_o(branch)
-	);
 
 ALU_Ctrl AC(
         .funct_i(instr[5:0]),
@@ -100,7 +100,7 @@ MUX_2to1 #(.size(32)) Mux_ALUSrc(
         );
 		
 ALU ALU(
-        .src1_i(rs),
+        .src1_i(src1),
 	.src2_i(src2),
 	.ctrl_i(ALUctrl),
 	.result_o(ALU_result),
@@ -109,13 +109,13 @@ ALU ALU(
 		
 Adder Adder2( // add pc and offset
         .src1_i(pc2),
-	.src2_i(extended_and_shifted),
+	.src2_i(shifted),
 	.sum_o(pc3)
 	);
 		
 Shift_Left_Two_32 Shifter(
         .data_i(extended),
-        .data_o(extended_and_shifted)
+        .data_o(shifted)
         );
 
 MUX_2to1 #(.size(32)) Mux_PC_Source(
