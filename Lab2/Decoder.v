@@ -29,7 +29,7 @@ output         Branch_o;
  
 //Internal Signals
 reg            RegWrite_o; // write register
-reg    [3-1:0] ALU_op_o;   // operator of ALU
+reg    [3-1:0] ALU_op_o;   // operator of ALU control
 reg            ALUSrc_o;   // 1 if from register, 0 if from instruction
 reg            RegDst_o;   // write rt or rd, 1 for rd, 0 for rt
 reg            Branch_o;   // 1 if branch

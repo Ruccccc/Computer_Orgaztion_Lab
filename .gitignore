@@ -1,11 +1,8 @@
 *
 
 !*.*
-
 !Lab*
-
 .DS_Store
-
 *.zip
-
 *.docx
+*.vcd
