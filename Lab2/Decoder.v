@@ -6,7 +6,7 @@
 //----------------------------------------------
 //Date:        
 //----------------------------------------------
-//Description: 
+//Description: According to instruction, assign the singles to other part of CPU.
 //--------------------------------------------------------------------------------
 `timescale 1ns/1ps
 module Decoder(

@@ -6,7 +6,7 @@
 //----------------------------------------------
 //Date:        
 //----------------------------------------------
-//Description: 
+//Description: assign the singles to ALU control according to ALUop given by decoder and function field.
 //--------------------------------------------------------------------------------
 `timescale 1ns/1ps
 module ALU_Ctrl(
