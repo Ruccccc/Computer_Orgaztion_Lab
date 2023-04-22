@@ -20,9 +20,9 @@ input         rst_i;
 
 //Internal Signles
 
-wire [32-1:0] pc1, pc2, pc3, pc4; // program count // p1 +4 --> p2  +offset --> p3  // mux p2, p3 --> p4 --> p1
-wire [32-1:0] instr;              // instrction
-wire  [3-1:0] ALUop;
+wire [32-1:0] pc1, pc2, pc3, pc4; // Program count // p1 +4 --> p2  +offset --> p3  // mux p2, p3 --> p4 --> p1
+wire [32-1:0] instr;              // Instrction
+wire  [3-1:0] ALUop;              // For ALU control.
 wire          RegDst;             // Write rt or rd.
 wire          RegWrite;           // Write register or not.
 wire          ALUsrc;             // From register or instruction.
@@ -107,7 +107,7 @@ ALU ALU(
 	.zero_o(ALU_Zero)
 	);
 		
-Adder Adder2( // add pc and offset
+Adder Adder2(
         .src1_i(pc2),
 	.src2_i(shifted),
 	.sum_o(pc3)

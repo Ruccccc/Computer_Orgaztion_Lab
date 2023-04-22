@@ -23,7 +23,7 @@ reg    [32-1:0]	 instr_o;
 integer          i;
 
 //32 words Memory
-reg    [32-1:0]  Instr_Mem [0:7-1];
+reg    [32-1:0]  Instr_Mem [0:6-1];
 
 //Parameter
     
@@ -36,7 +36,7 @@ end
 initial begin
     for ( i=0; i<32; i=i+1 )
 	    Instr_Mem[i] = 32'b0;
-    $readmemb("TestData/CO_P2_test_data2.txt", Instr_Mem);  //Read instruction from "CO_P2_test_data1.txt"   
+    $readmemb("TestData/CO_P2_test_data1.txt", Instr_Mem);  //Read instruction from "CO_P2_test_data1.txt"   
 		
 end
 endmodule
