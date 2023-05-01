@@ -56,11 +56,11 @@ initial begin
     pattern_count = 6'd0;
     
     // edited.
-    $readmemh("testcase_new/src1.txt", mem_src1);
-    $readmemh("testcase_new/src2.txt", mem_src2);
-    $readmemh("testcase_new/op.txt", mem_opcode);
-    $readmemh("testcase_new/result.txt", mem_result);
-    $readmemh("testcase_new/zcv.txt", mem_zcv);
+    $readmemh("src1.txt", mem_src1);
+    $readmemh("src2.txt", mem_src2);
+    $readmemh("op.txt", mem_opcode);
+    $readmemh("result.txt", mem_result);
+    $readmemh("zcv.txt", mem_zcv);
     
     #50 rst_n = 1'b1;
     #15 start_check = 1'd1;
