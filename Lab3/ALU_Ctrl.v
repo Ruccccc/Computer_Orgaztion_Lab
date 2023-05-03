@@ -29,11 +29,33 @@ reg        [4-1:0] ALUCtrl_o;
        
 //Select exact operation
 
+    always @(funct_i, ALUOp_i) begin
+        case (ALUOp_i)
+
+            0:       // add
+                ALUCtrl_o <= 2;
+
+            1:       // sub
+                ALUCtrl_o <= 6;
+            
+            2: begin // R-Type
+                case (funct_i)
+                    32: ALUCtrl_o <= 2; // add
+                    34: ALUCtrl_o <= 6; // sub
+                    36: ALUCtrl_o <= 0; // and
+                    37: ALUCtrl_o <= 1; // or
+                    42: ALUCtrl_o <= 7; // slt
+                    default: ALUCtrl_o = 0; // Should never meet
+                endcase
+            end
+
+            3:       // stl
+                ALUCtrl_o <= 7;
+            
+            default: // Should never meet
+                ALUCtrl_o <= 0;
+        
+        endcase
+    end
+
 endmodule     
-
-
-
-
-
-                    
-                    

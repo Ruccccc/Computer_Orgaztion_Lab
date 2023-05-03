@@ -17,7 +17,9 @@ module Decoder(
 	RegDst_o,
 	Branch_o,
 	Jump_o,
-	MemtoReg_o
+	MemtoReg_o,
+	MemRead_o,
+	MemWrite_o
 	);
      
 //I/O ports
@@ -26,19 +28,23 @@ input  [6-1:0] instr_op_i;
 output         RegWrite_o;
 output [3-1:0] ALU_op_o;
 output         ALUSrc_o;
-output         RegDst_o;
+output [2-1:0] RegDst_o;
 output         Branch_o;
 output 		   Jump_o;
 output 		   MemtoReg_o;
+output 		   MemRead_o;
+output         MeMWrite;
  
 //Internal Signals
 reg    [3-1:0] ALU_op_o;
 reg            ALUSrc_o;
 reg            RegWrite_o;
-reg            RegDst_o;
+reg    [2-1:0] RegDst_o;
 reg            Branch_o;
 reg 		   Jump_o;
 reg 		   MemtoReg_o;
+reg 		   MemRead_o;
+reg			   MeMWrite;
 
 //Parameter
 
@@ -48,7 +54,7 @@ reg 		   MemtoReg_o;
 	always @(instr_op_i) begin
 		case (instr_op_i)
 
-			0: begin // R-type
+			0: begin			 // R-type
 				RegWrite_o <= 1; // write
 				ALU_op_o   <= 2; // accroding to function field
 				ALUSrc_o   <= 0; // from register
@@ -56,6 +62,9 @@ reg 		   MemtoReg_o;
 				Branch_o   <= 0; // not branch
 				Jump_o	   <= 0; // not jump
 				MemtoReg_o <= 0; // ALU result
+				MemRead_o  <= 0; // No read
+				MeMWrite   <= 0; // No write
+				
 			end
 
 			2: begin 			 // Jump
@@ -64,18 +73,22 @@ reg 		   MemtoReg_o;
 				ALUSrc_o   <= 0; // Don't care;
 				RegDst_o   <= 0; // Don't care;
 				Branch_o   <= 0; // Branch
-				Jump_o	   <= 0; // not jump
+				Jump_o	   <= 1; // jump
 				MemtoReg_o <= 0; // Don't care
+				MemRead_o  <= 0; // No read
+				MeMWrite   <= 0; // No write
 			end
 
 			3: begin			 // jal -> write pc to Reg[31] and {pc[31:28], address<<2} to pc
-				RegWrite_o <= 0; // not write
+				RegWrite_o <= 1; // write pc
 				ALU_op_o   <= 0; // Don't care
 				ALUSrc_o   <= 0; // Don't care
-				RegDst_o   <= 0; // write rt
+				RegDst_o   <= 3; // write register[31]
 				Branch_o   <= 0; // not branch
-				Jump_o	   <= 0; // not jump
+				Jump_o	   <= 1; // jump
 				MemtoReg_o <= 0; // Don't care
+				MemRead_o  <= 0;
+				MeMWrite   <= 0;
 			end
 
 			4: begin 			 // beq

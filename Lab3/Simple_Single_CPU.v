@@ -26,16 +26,16 @@ wire    [32-1:0]  pc1, pc2, pc3, pc4;
 wire    [32-1:0]  ins;
 
 // Decoder
+wire              Reg_Write;
+wire      [3-1:0] ALUop;
+wire              ALUsrc;
+wire      [2-1:0] Reg_Dst;
 wire              Branch;
+wire              Jump;
 wire              MemtoReg;
 wire              Branch_type;
-wire              Jump;
 wire              Mem_Read;
 wire              Mem_Write;
-wire              ALUop;
-wire              ALUsrc;
-wire              Reg_Write;
-wire              Reg_Dst;
 
 // Register
 wire    [ 6-1:0]  Write_Reg;
@@ -88,13 +88,16 @@ Reg_File Registers(
         );
 
 Decoder Decoder(
-        .instr_op_i(),
-	.RegWrite_o(),
-	.ALU_op_o(),
-	.ALUSrc_o(),
-	.RegDst_o(),
-	.Branch_o(),
-        .Jump_o(Jump)
+        .instr_op_i(ins[31:26]),
+	.RegWrite_o(Reg_Write),
+	.ALU_op_o(ALUop),
+	.ALUSrc_o(ALUsrc),
+	.RegDst_o(Reg_Dst),
+	.Branch_o(Branch),
+        .Jump_o(Jump),
+        .MemtoReg_o(MemtoReg),
+	.MemRead_o(Mem_Read),
+	.MemWrite_o(Mem_Write)
 	);
 
 ALU_Ctrl AC(
