@@ -27,9 +27,9 @@ wire    [32-1:0]  ins;
 
 // Decoder
 wire              Reg_Write;
-wire      [3-1:0] ALUop;
+wire    [3-1:0]   ALUop;
 wire              ALUsrc;
-wire      [2-1:0] Reg_Dst;
+wire    [2-1:0]   Reg_Dst;
 wire              Branch;
 wire              Jump;
 wire              MemtoReg;
@@ -44,9 +44,16 @@ wire    [32-1:0]  Read_data2;
 wire    [32-1:0]  Write_Data;
 
 // ALU
+wire    [4-1:0]   ALUCtrl;
 wire    [32-1:0]  src2;
 wire    [32-1:0]  ALU_result;
 wire              ALU_zero;
+
+// Extend
+wire    [32-1:0] Extended;
+
+// Shift left
+wire    [32-1:0] Shifted;
 
 
 // Greate componentes--------------------------------------------------------------------------------
@@ -73,7 +80,7 @@ MUX_2to1 #(.size(5)) Mux_Write_Reg(
         .data1_i(ins[15:11]),
         .select_i(Reg_Dst),
         .data_o(Write_Reg)
-        );	
+        );
 
 Reg_File Registers(
         .clk_i(clk_i),
@@ -101,39 +108,48 @@ Decoder Decoder(
 	);
 
 ALU_Ctrl AC(
-        .funct_i(),
-        .ALUOp_i(),
-        .ALUCtrl_o() 
+        .funct_i(ins[5:0]),
+        .ALUOp_i(ALUop),
+        .ALUCtrl_o(ALUCtrl)
         );
 
 Sign_Extend SE(
-        .data_i(),
-        .data_o()
+        .data_i(ins[15:0]),
+        .data_o(Extended)
         );
 
 MUX_2to1 #(.size(32)) Mux_ALUSrc(
-        .data0_i(),
-        .data1_i(),
-        .select_i(),
-        .data_o()
-        );	
+        .data0_i(Read_data2),
+        .data1_i(Extended),
+        .select_i(ALUsrc),
+        .data_o(src2)
+        );
 
 ALU ALU(
-        .src1_i(),
-	.src2_i(),
-	.ctrl_i(),
-	.result_o(),
-	.zero_o()
+        .src1_i(Read_data1),
+	.src2_i(src2),
+	.ctrl_i(ALUCtrl),
+	.result_o(ALU_result),
+	.zero_o(ALU_zero)
 	);
 
 Data_Memory Data_Memory(
 	.clk_i(clk_i),
-	.addr_i(),
+	.addr_i(ALU_result),
 	.data_i(),
 	.MemRead_i(),
 	.MemWrite_i(),
 	.data_o()
 	);
+
+MUX_4to1 #(.size()) Mux_WriteData(
+        .data0_i(),
+        .data1_i(),
+        .data2_i(),
+        .data3_i(),
+        .select_i(),
+        .data_o()
+        );
 
 Adder Adder2(
         .src1_i(),
@@ -154,6 +170,3 @@ MUX_2to1 #(.size(32)) Mux_PC_Source(
         );	
 
 endmodule
-		  
-
-
