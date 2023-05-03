@@ -26,25 +26,27 @@ wire    [32-1:0]  pc1, pc2, pc3, pc4;
 wire    [32-1:0]  ins;
 
 // Decoder
+// wire    [3-1:0]   ALUop;
+// wire    [2-1:0]   Reg_Dst;
+// wire              Branch;
+// wire              Jump;
+wire    [2-1:0]   Jump_type;    // 0 for not, 1 for branch, 2 for jump, 3 for jr.
+wire    [2-1:0]   MemtoReg;     // MUX the data to register write. // 0 for ALU_result, 1 for Memory.
+wire    [5-1:0]   Read1, Read2; // Read register
 wire              Reg_Write;
-wire    [3-1:0]   ALUop;
-wire              ALUsrc;
-wire    [2-1:0]   Reg_Dst;
-wire              Branch;
-wire              Jump;
-wire              MemtoReg;
-wire              Branch_type;
+wire    [ 5-1:0]  Write_Reg;
+wire    [4-1:0]   ALUCtrl;
+wire              ALUsrc;       // 0 for register, 1 for instruction.
 wire              Mem_Read;
 wire              Mem_Write;
 
 // Register
-wire    [ 6-1:0]  Write_Reg;
+
 wire    [32-1:0]  Read_data1;
 wire    [32-1:0]  Read_data2;
 wire    [32-1:0]  Write_Data;
 
 // ALU
-wire    [4-1:0]   ALUCtrl;
 wire    [32-1:0]  src2;
 wire    [32-1:0]  ALU_result;
 wire              ALU_zero;
