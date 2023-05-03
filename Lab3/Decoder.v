@@ -2,7 +2,7 @@
 //--------------------------------------------------------------------------------
 //Version:     1
 //--------------------------------------------------------------------------------
-//Writer:      Luke
+//Writer:      110652011
 //----------------------------------------------
 //Date:        2010/8/16
 //----------------------------------------------
@@ -15,7 +15,9 @@ module Decoder(
 	ALU_op_o,
 	ALUSrc_o,
 	RegDst_o,
-	Branch_o
+	Branch_o,
+	Jump_o,
+	MemtoReg_o
 	);
      
 //I/O ports
@@ -26,6 +28,8 @@ output [3-1:0] ALU_op_o;
 output         ALUSrc_o;
 output         RegDst_o;
 output         Branch_o;
+output 		   Jump_o;
+output 		   MemtoReg_o;
  
 //Internal Signals
 reg    [3-1:0] ALU_op_o;
@@ -33,17 +37,107 @@ reg            ALUSrc_o;
 reg            RegWrite_o;
 reg            RegDst_o;
 reg            Branch_o;
+reg 		   Jump_o;
+reg 		   MemtoReg_o;
 
 //Parameter
 
 
 //Main function
 
+	always @(instr_op_i) begin
+		case (instr_op_i)
+
+			0: begin // R-type
+				RegWrite_o <= 1; // write
+				ALU_op_o   <= 2; // accroding to function field
+				ALUSrc_o   <= 0; // from register
+				RegDst_o   <= 1; // write rd
+				Branch_o   <= 0; // not branch
+				Jump_o	   <= 0; // not jump
+				MemtoReg_o <= 0; // ALU result
+			end
+
+			2: begin 			 // Jump
+				RegWrite_o <= 0; // not write
+				ALU_op_o   <= 0; // Don't do
+				ALUSrc_o   <= 0; // Don't care;
+				RegDst_o   <= 0; // Don't care;
+				Branch_o   <= 0; // Branch
+				Jump_o	   <= 0; // not jump
+				MemtoReg_o <= 0; // Don't care
+			end
+
+			3: begin			 // jal -> write pc to Reg[31] and {pc[31:28], address<<2} to pc
+				RegWrite_o <= 0; // not write
+				ALU_op_o   <= 0; // Don't care
+				ALUSrc_o   <= 0; // Don't care
+				RegDst_o   <= 0; // write rt
+				Branch_o   <= 0; // not branch
+				Jump_o	   <= 0; // not jump
+				MemtoReg_o <= 0; // Don't care
+			end
+
+			4: begin 			 // beq
+				RegWrite_o <= 0; // not write
+				ALU_op_o   <= 1; // sub
+				ALUSrc_o   <= 0; // from register
+				RegDst_o   <= 0; // Don't care
+				Branch_o   <= 1; // branch
+				Jump_o	   <= 0; // not jump
+				MemtoReg_o <= 0; // Don't care
+			end
+
+			8: begin 			 // addi
+				RegWrite_o <= 1; // write
+				ALU_op_o   <= 0; // add
+				ALUSrc_o   <= 1; // from instruction
+				RegDst_o   <= 0; // write rt
+				Branch_o   <= 0; // not branch
+				Jump_o	   <= 0; // not jump
+				MemtoReg_o <= 0; // ALU result
+			end
+
+			10: begin			 // slti
+				RegWrite_o <= 1; // write
+				ALU_op_o   <= 3; // slt
+				ALUSrc_o   <= 1; // from instruction
+				RegDst_o   <= 0; // write rt
+				Branch_o   <= 0; // not branch
+				Jump_o	   <= 0; // not jump
+				MemtoReg_o <= 0; // ALU result
+			end
+
+			35: begin			 // lw
+				RegWrite_o <= 1; // write
+				ALU_op_o   <= 0; // Don't care
+				ALUSrc_o   <= 0; // Don't care
+				RegDst_o   <= 0; // write rt
+				Branch_o   <= 0; // not branch
+				Jump_o	   <= 0; // not jump
+				MemtoReg_o <= 1; // Memory
+			end
+
+			43: begin			 // sw
+				RegWrite_o <= 0; // not write
+				ALU_op_o   <= 0; // Don't care
+				ALUSrc_o   <= 0; // Don't care
+				RegDst_o   <= 0; // write rt
+				Branch_o   <= 0; // not branch
+				Jump_o	   <= 0; // not jump
+				MemtoReg_o <= 0; // Don't care
+			end
+
+			default: begin
+				RegWrite_o <= 0;
+				ALU_op_o   <= 0;
+				ALUSrc_o   <= 0;
+				RegDst_o   <= 0;
+				Branch_o   <= 0;
+				Jump_o	   <= 0;
+				MemtoReg_o <= 0;
+			end
+		endcase
+	end
+
 endmodule
-
-
-
-
-
-                    
-                    
