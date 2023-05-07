@@ -34,7 +34,7 @@ wire             zero_o;
 //Main function
 
 	assign zero_o = (result_o == 0);
-	always @(ctrl_i, src1_i, src2_i) begin
+	always @(*) begin
 		case (ctrl_i)
 			0:	result_o <= src1_i & src2_i; 		 // and
 			1:  result_o <= src1_i | src2_i; 		 // or

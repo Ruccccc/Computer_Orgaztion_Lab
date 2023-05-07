@@ -26,22 +26,17 @@ wire    [32-1:0]  pc1, pc2, pc3, pc4;
 wire    [32-1:0]  ins;
 
 // Decoder
-// wire    [3-1:0]   ALUop;
-// wire    [2-1:0]   Reg_Dst;
-// wire              Branch;
-// wire              Jump;
-wire    [2-1:0]   Jump_type;    // 0 for not, 1 for branch, 2 for jump, 3 for jr.
-wire    [2-1:0]   MemtoReg;     // MUX the data to register write. // 0 for ALU_result, 1 for Memory.
-wire    [5-1:0]   Read1, Read2; // Read register
-wire              Reg_Write;
-wire    [ 5-1:0]  Write_Reg;
-wire    [4-1:0]   ALUCtrl;
-wire              ALUsrc;       // 0 for register, 1 for instruction.
-wire              Mem_Read;
-wire              Mem_Write;
+wire    [2-1:0] Jump_type;      // 0 for not, 1 for branch, 2 for jump, 3 for jr.
+wire    [2-1:0] MemtoReg;       // MUX the data to register write. // 0 for ALU_result, 1 for Memory. 2 for pc + 4
+wire    [5-1:0] Read1, Read2;   // Read register.
+wire            Reg_Write;      // Register Write or not.
+wire    [5-1:0] Write_addr;     // Register write address.
+wire    [4-1:0] ALUCtrl;        //
+wire            ALUsrc;         // 0 for register, 1 for instruction.
+wire            Mem_Read;       //
+wire            Mem_Write;      //
 
 // Register
-
 wire    [32-1:0]  Read_data1;
 wire    [32-1:0]  Read_data2;
 wire    [32-1:0]  Write_Data;
@@ -55,7 +50,11 @@ wire              ALU_zero;
 wire    [32-1:0] Extended;
 
 // Shift left
-wire    [32-1:0] Shifted;
+wire    [32-1:0] BShifted;      // For Branch
+wire    [32-1:0] JShifted;      // For Jump
+
+// DataMemroy
+wire    [32-1:0] Mem_data;
 
 
 // Greate componentes--------------------------------------------------------------------------------
@@ -68,7 +67,7 @@ ProgramCounter PC(
 
 Adder Adder1(           // pc + 4
         .src1_i(pc1),
-	.src2_i(4'd4),
+	.src2_i(32'd4),
 	.sum_o(pc2)
 	);
 
@@ -77,19 +76,12 @@ Instr_Memory IM(
 	.instr_o(ins)
 	);
 
-MUX_2to1 #(.size(5)) Mux_Write_Reg(
-        .data0_i(ins[20:16]),
-        .data1_i(ins[15:11]),
-        .select_i(Reg_Dst),
-        .data_o(Write_Reg)
-        );
-
 Reg_File Registers(
         .clk_i(clk_i),
 	.rst_i(rst_i),
-        .RSaddr_i(ins[25:21]),
-        .RTaddr_i(ins[20:16]),
-        .RDaddr_i(Write_Reg),
+        .RSaddr_i(Read1),
+        .RTaddr_i(Read2),
+        .RDaddr_i(Write_addr),
         .RDdata_i(Write_Data),
         .RegWrite_i(Reg_Write),
         .RSdata_o(Read_data1),
@@ -97,23 +89,18 @@ Reg_File Registers(
         );
 
 Decoder Decoder(
-        .instr_op_i(ins[31:26]),
-	.RegWrite_o(Reg_Write),
-	.ALU_op_o(ALUop),
-	.ALUSrc_o(ALUsrc),
-	.RegDst_o(Reg_Dst),
-	.Branch_o(Branch),
-        .Jump_o(Jump),
-        .MemtoReg_o(MemtoReg),
-	.MemRead_o(Mem_Read),
-	.MemWrite_o(Mem_Write)
+        .instr_i(ins),
+	.Jump_type_o(Jump_type),
+	.MemtoReg_o(MemtoReg),
+	.Read1_o(Read1),
+	.Read2_o(Read2),
+	.Reg_Write_o(Reg_Write),
+        .Write_addr_o(Write_addr),
+	.ALUCtrl_o(ALUCtrl),
+	.ALUsrc_o(ALUsrc),
+	.Mem_Read_o(Mem_Read),
+	.Mem_Write_o(Mem_Write)
 	);
-
-ALU_Ctrl AC(
-        .funct_i(ins[5:0]),
-        .ALUOp_i(ALUop),
-        .ALUCtrl_o(ALUCtrl)
-        );
 
 Sign_Extend SE(
         .data_i(ins[15:0]),
@@ -138,37 +125,43 @@ ALU ALU(
 Data_Memory Data_Memory(
 	.clk_i(clk_i),
 	.addr_i(ALU_result),
-	.data_i(),
-	.MemRead_i(),
-	.MemWrite_i(),
-	.data_o()
+	.data_i(Read_data2),
+	.MemRead_i(Mem_Read),
+	.MemWrite_i(Mem_Write),
+	.data_o(Mem_data)
 	);
 
-MUX_4to1 #(.size()) Mux_WriteData(
-        .data0_i(),
-        .data1_i(),
-        .data2_i(),
-        .data3_i(),
-        .select_i(),
-        .data_o()
+MUX_4to1 #(.size(32)) Mux_WriteData(
+        .data0_i(ALU_result),   // other
+        .data1_i(Mem_data),     // lw
+        .data2_i(pc2),          // jar
+        .select_i(MemtoReg),
+        .data_o(Write_Data)
+        );
+
+Shift_Left_Two_32 Shifter1( // beq
+        .data_i(Extended),
+        .data_o(BShifted)
+        );
+
+Shift_Left_Two_32 Shifter2( // jump
+        .data_i({6'd0, ins[25:0]}),
+        .data_o(JShifted)
         );
 
 Adder Adder2(
-        .src1_i(),
-	.src2_i(),
-	.sum_o()
+        .src1_i(pc2),
+	.src2_i(BShifted),
+	.sum_o(pc3)
 	);
 
-Shift_Left_Two_32 Shifter(
-        .data_i(),
-        .data_o()
-        ); 		
-
-MUX_2to1 #(.size(32)) Mux_PC_Source(
-        .data0_i(),
-        .data1_i(),
-        .select_i(),
-        .data_o()
-        );	
+MUX_4to1 #(.size(32)) Mux_PC_Source(
+        .data0_i(pc2),                                  //
+        .data1_i(pc3),                                  // Branch
+        .data2_i({pc2[31:28], JShifted[27:0]}),         // Jump
+        .data3_i(Read_data1),                           // Jr
+        .select_i({Jump_type[1], Jump_type[0] & ALU_zero | Jump_type[1] & Jump_type[0]}),
+        .data_o(pc4)
+        );
 
 endmodule

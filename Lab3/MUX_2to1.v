@@ -29,7 +29,7 @@ reg     [size-1:0] data_o;
 
 //Main function
 
-    always @(data0_i, data1_i) begin
+    always @(*) begin
         data_o <= select_i ? data1_i : data0_i;
     end
 

@@ -9,7 +9,7 @@
 //Description: Select the signal pass.
 //--------------------------------------------------------------------------------
 `timescale 1ns/1ps
-module MUX_2to1(
+module MUX_4to1(
         data0_i,
         data1_i,
         data2_i,
@@ -39,7 +39,7 @@ reg     [size-1:0] data_o;
             1: data_o <= data1_i;
             2: data_o <= data2_i;
             3: data_o <= data3_i;
-            default: 
+            default: ;
         endcase
     end
 
