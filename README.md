@@ -10,4 +10,8 @@ ALU with AND, OR, ADD, SUB, NOR and Set less then.
 
 ## Lab2
 
-Implement a simple single cycle CPU.
+Implement a simple single cycle CPU, with instruction: add, addi, sub, and, or, stl, stli, beq.
+
+## Lab3
+
+Continue Lab2, add additional instuction: lw, sw, jump, jal, jr.
