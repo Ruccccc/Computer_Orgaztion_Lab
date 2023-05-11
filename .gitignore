@@ -7,3 +7,4 @@
 *.vcd
 *.out
 *.txt
+!code
