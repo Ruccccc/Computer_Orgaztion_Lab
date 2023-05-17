@@ -22,6 +22,10 @@ always #(`CYCLE_TIME/2) CLK = ~CLK;
 
 
 initial begin
+
+    $dumpfile("testbench.vcd");
+	$dumpvars;
+
     CLK = 0;
     RST = 0;
     count = 0;
@@ -32,7 +36,7 @@ initial begin
         cpu.IM.instruction_file[i] = 32'b0;
     end
     // Read instruction from file
-    $readmemb("CO_P4_test_1.txt", cpu.IM.instruction_file);  /*** Modify this line to try different testcases ***/
+    $readmemb("testcase/CO_P4_test_3.txt", cpu.IM.instruction_file);  /*** Modify this line to try different testcases ***/
 
     // Data Memory
     for(i = 0; i < 128; i = i + 1)
@@ -47,7 +51,7 @@ end
 // Print result
 always@(posedge CLK) begin
     count = count + 1;
-    $display("%4d.  PC = %d", count, cpu.PC.pc_out_o);
+    // $display("%4d.  PC = %d", count, cpu.PC.pc_out_o);
     
     // Show specific signal
     // $display("v0 = %d", cpu.RF.Reg_File[2]);
@@ -77,7 +81,7 @@ always@(posedge CLK) begin
     ); */
 
     // Show Result
-    if(cpu.PC.pc_in_i > 128) begin
+    if(cpu.PC.pc_in_i > 4 * 11) begin
         $display("\n===============  Final Result  ===============");
         // Display result in console
         $display("- Register File -\n r0 =%6d\t r1 =%6d\t r2 =%6d\t r3 =%6d\n r4 =%6d\t r5 =%6d\t r6 =%6d\t r7 =%6d\n r8 =%6d\t r9 =%6d\tr10 =%6d\tr11 =%6d\nr12 =%6d\tr13 =%6d\tr14 =%6d\tr15 =%6d\nr16 =%6d\tr17 =%6d\tr18 =%6d\tr19 =%6d\nr20 =%6d\tr21 =%6d\tr22 =%6d\tr23 =%6d\nr24 =%6d\tr25 =%6d\tr26 =%6d\tr27 =%6d\nr28 =%6d\tr29 =%6d\tr30 =%6d\tr31 =%6d\n",

@@ -33,7 +33,7 @@ wire             zero_o;
 			7:  result_o <= src1_i < src2_i ? 1 : 0; 	// slt
 			12: result_o <= ~(src1_i | src2_i);		 	// nor
 			13:	result_o <= src1_i * src2_i;		 	// mult
-			14:	result_o <= src1 ^ src2;				// xor
+			14:	result_o <= src1_i ^ src2_i;			// xor
 			default: result_o <= 0;
 		endcase
 	end
