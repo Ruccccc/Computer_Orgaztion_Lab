@@ -1,6 +1,6 @@
 `timescale 1ns / 1ps
 // 110652011
-module Pipelined_CPU(
+module Pipe_CPU_1(
     clk_i,
     rst_i
 );
@@ -88,10 +88,71 @@ wire    [32-1:0]        WB_Reg_write_data;
 /*                              design                              */
 /*==================================================================*/
 
+initial begin
+
+    ID_pc2 = 0;
+    ID_ins = 0;
+    ID_PCsrc = 0;
+    ID_MemtoReg = 0;     	// MUX the data to register write.
+    ID_ReadAddr1 = 0; 	    // Read register
+    ID_ReadAddr2 = 0;
+    ID_ALUCtrl = 0;
+    ID_ALUsrc = 0;
+    ID_ReadData1 = 0;
+    ID_ReadData2 = 0;
+    ID_Extended = 0;
+    ID_Mem_Read = 0;
+    ID_Mem_Write = 0;
+    ID_RegWrite = 0;
+    ID_Write_addr = 0;
+    ID_JShifted = 0;    
+
+    EX_pc2, EX_pc3 = 0;
+    EX_Extended = 0;
+    EX_BShifted = 0;
+    EX_JShifted = 0;
+    EX_PCsrc = 0;
+    EX_MemtoReg = 0;
+    EX_RegWrite = 0;
+    EX_Write_addr = 0;
+    EX_ReadData1 = 0;
+    EX_ReadData2 = 0;
+    EX_ALUCtrl = 0;
+    EX_ALUsrc = 0;
+    EX_src2 = 0;
+    EX_Mem_Read = 0;
+    EX_Mem_Write = 0;
+    EX_ALU_result = 0;
+    EX_ALU_zero = 0;    
+
+    MEM_PCsrc = 0;
+    MEM_pc2 = 0;
+    MEM_pc3 = 0;
+    MEM_ALU_result = 0;
+    MEM_MemtoReg = 0;
+    MEM_RegWrite = 0;
+    MEM_Write_addr = 0;
+    MEM_ReadData1 = 0;
+    MEM_Read_Data2 = 0;
+    MEM_Mem_Data = 0;
+    MEM_Mem_Read = 0;
+    MEM_Mem_Write = 0;
+    MEM_Jump_addr = 0;
+    MEM_BShifted = 0;   
+
+    WB_MemtoReg = 0;
+    WB_RegWrite = 0;
+    WB_Write_addr = 0;
+    WB_pc2 = 0;
+    WB_Mem_Data = 0;
+    WB_ALU_result = 0;
+    WB_Reg_write_data = 0;
+end
+
 //Instantiate the components in IF stage
 
 MUX_4to1 #(.size(32)) Mux0( // Modify N, which is the total length of input/output
-    .data0_i(IF_pc2),           // 
+    .data0_i(ID_pc2),           // 
     .data1_i(MEM_Jump_addr),    // jump
     .data2_i(MEM_pc3),          // beq
     .data3_i(MEM_ReadData1),    // jr
