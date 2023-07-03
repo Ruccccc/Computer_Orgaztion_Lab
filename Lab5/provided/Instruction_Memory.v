@@ -20,7 +20,7 @@ input   [31:0]  addr_i;
 output  [31:0]  instr_o;
 
 // Instruction File
-reg     [31:0]  instruction_file    [0:31];
+reg     [31:0]  instruction_file    [0:21-1];
 
 assign  instr_o = instruction_file[addr_i / 4];  
 

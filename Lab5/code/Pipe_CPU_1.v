@@ -17,14 +17,19 @@ input rst_i;
 /*==================================================================*/
 
 /**** IF stage ****/
-wire    [32-1:0]    IF_pc1, IF_pc2, IF_pc4; // pc, pc + 4.
-wire    [32-1:0]    IF_ins;         // instruction
+wire    [32-1:0]        IF_pc1, IF_pc2, IF_pc4; // pc, pc + 4.
+wire    [32-1:0]        IF_ins;         // instruction
+wire                    IF_pcwrite;
+wire                    B_Flush;
 
 /**** ID stage ****/
-wire     [32-1:0]       ID_pc2;
-wire     [32-1:0]       ID_ins;
-wire    [2-1:0]         ID_PCsrc;
-wire    [2-1:0]         ID_MemtoReg;     	// MUX the data to register write.
+wire                    ID_Flush;
+
+wire    [32-1:0]        ID_pc2;
+wire    [32-1:0]        ID_ins;
+
+wire    [3-1:0]         ID_Branch;
+wire                    ID_MemtoReg;     	// MUX the data to register write.
 wire    [5-1:0]         ID_ReadAddr1; 	    // Read register
 wire    [5-1:0]         ID_ReadAddr2;
 wire    [4-1:0]	        ID_ALUCtrl;
@@ -36,46 +41,62 @@ wire	       	        ID_Mem_Read;
 wire	       	        ID_Mem_Write;
 wire	       	        ID_RegWrite;
 wire	[5-1:0]	        ID_Write_addr;
-wire    [32-1:0]        ID_JShifted;
 
 /**** EX stage ****/
-wire    [32-1:0]        EX_pc2, EX_pc3;
+wire                    EX_Flush;
+wire    [2-1:0]         EX_muxrs;
+wire    [2-1:0]         EX_muxrt;
+
+
+wire    [6-1:0]         EX_op;
+wire    [32-1:0]        EX_pc2;
+wire    [32-1:0]        EX_pc3;
+wire    [5-1:0]         EX_ReadAddr1; 	    // Read register
+wire    [5-1:0]         EX_ReadAddr2;
 wire    [32-1:0]        EX_Extended;
 wire    [32-1:0]        EX_BShifted;
-wire    [32-1:0]        EX_JShifted;
-wire    [2-1:0]         EX_PCsrc;
-wire    [2-1:0]         EX_MemtoReg;
+// wire    [32-1:0]        EX_JShifted;
+wire    [3-1:0]         EX_Branch;
+wire                    EX_MemtoReg;
 wire                    EX_RegWrite;
 wire    [5-1:0]         EX_Write_addr;
-wire    [32-1:0]        EX_ReadData1;
-wire    [32-1:0]        EX_ReadData2;
+wire    [32-1:0]        EX_ReadData1_1;
+wire    [32-1:0]        EX_ReadData1_2;
+wire    [32-1:0]        EX_ReadData2_1;
+wire    [32-1:0]        EX_ReadData2_2;
+wire    [32-1:0]        EX_ReadData2_3;
 wire    [4-1:0]         EX_ALUCtrl;
 wire                    EX_ALUsrc;
-wire    [32-1:0]        EX_src2;
 wire                    EX_Mem_Read;
 wire                    EX_Mem_Write;
+
 wire    [32-1:0]        EX_ALU_result;
 wire                    EX_ALU_zero;
+wire                    EX_ALU_pos;
 
 /**** MEM stage ****/
-wire    [2-1:0]         MEM_PCsrc;
+wire    [6-1:0]         MEM_op;
+wire    [3-1:0]         MEM_Branch;
 wire    [32-1:0]        MEM_pc2;
 wire    [32-1:0]        MEM_pc3;
 wire    [32-1:0]        MEM_ALU_result;
-wire    [2-1:0]         MEM_MemtoReg;
+wire                    MEM_ALU_zero;
+wire                    MEM_ALU_pos;
+wire                    MEM_MemtoReg;
 wire                    MEM_RegWrite;
 wire    [5-1:0]         MEM_Write_addr;
 wire    [32-1:0]        MEM_ReadData1;
 wire    [32-1:0]        MEM_Read_Data2;
-wire    [32-1:0]        MEM_Mem_Data;
 wire                    MEM_Mem_Read;
 wire                    MEM_Mem_Write;
-wire    [32-1:0]        MEM_Jump_addr;
 wire    [32-1:0]        MEM_BShifted;
 
+wire                    MEM_Branch_2;
+wire    [32-1:0]        MEM_Mem_Data;
 
 /**** WB stage ****/
-wire    [2-1:0]         WB_MemtoReg;
+wire    [6-1:0]         WB_op;
+wire                    WB_MemtoReg;
 wire                    WB_RegWrite;
 wire    [5-1:0]         WB_Write_addr;
 wire    [32-1:0]        WB_pc2;
@@ -88,81 +109,45 @@ wire    [32-1:0]        WB_Reg_write_data;
 /*                              design                              */
 /*==================================================================*/
 
-initial begin
+Hazard_Detection HD(
+    .EX_op(EX_op),
+    .Branch(MEM_Branch_2),
+    .ID_rs(ID_ReadAddr1),
+    .ID_rt(ID_ReadAddr2),
+    .EX_rd(EX_Write_addr),
+    // .MEM_rd(MEM_Write_addr),
+    .ID_Flush(ID_Flush),
+    .B_Flush(B_Flush),
+    // .EX_Flush(EX_Flush),
+    .PCWrite(IF_pcwrite)
+);
 
-    ID_pc2 = 0;
-    ID_ins = 0;
-    ID_PCsrc = 0;
-    ID_MemtoReg = 0;     	// MUX the data to register write.
-    ID_ReadAddr1 = 0; 	    // Read register
-    ID_ReadAddr2 = 0;
-    ID_ALUCtrl = 0;
-    ID_ALUsrc = 0;
-    ID_ReadData1 = 0;
-    ID_ReadData2 = 0;
-    ID_Extended = 0;
-    ID_Mem_Read = 0;
-    ID_Mem_Write = 0;
-    ID_RegWrite = 0;
-    ID_Write_addr = 0;
-    ID_JShifted = 0;    
-
-    EX_pc2, EX_pc3 = 0;
-    EX_Extended = 0;
-    EX_BShifted = 0;
-    EX_JShifted = 0;
-    EX_PCsrc = 0;
-    EX_MemtoReg = 0;
-    EX_RegWrite = 0;
-    EX_Write_addr = 0;
-    EX_ReadData1 = 0;
-    EX_ReadData2 = 0;
-    EX_ALUCtrl = 0;
-    EX_ALUsrc = 0;
-    EX_src2 = 0;
-    EX_Mem_Read = 0;
-    EX_Mem_Write = 0;
-    EX_ALU_result = 0;
-    EX_ALU_zero = 0;    
-
-    MEM_PCsrc = 0;
-    MEM_pc2 = 0;
-    MEM_pc3 = 0;
-    MEM_ALU_result = 0;
-    MEM_MemtoReg = 0;
-    MEM_RegWrite = 0;
-    MEM_Write_addr = 0;
-    MEM_ReadData1 = 0;
-    MEM_Read_Data2 = 0;
-    MEM_Mem_Data = 0;
-    MEM_Mem_Read = 0;
-    MEM_Mem_Write = 0;
-    MEM_Jump_addr = 0;
-    MEM_BShifted = 0;   
-
-    WB_MemtoReg = 0;
-    WB_RegWrite = 0;
-    WB_Write_addr = 0;
-    WB_pc2 = 0;
-    WB_Mem_Data = 0;
-    WB_ALU_result = 0;
-    WB_Reg_write_data = 0;
-end
+Forwarding_Unit FU(
+    .clk_i(clk_i),
+    .MEM_RegWrite_i(MEM_RegWrite),
+    .WB_RegWrite_i(WB_RegWrite),
+    .EX_rs(EX_ReadAddr1),
+    .EX_rt(EX_ReadAddr2),
+    .EX_rd(EX_Write_addr),
+    .MEM_rd(MEM_Write_addr),
+    .WB_rd(WB_Write_addr),
+    .muxrs(EX_muxrs),
+    .muxrt(EX_muxrt)
+);
 
 //Instantiate the components in IF stage
 
-MUX_4to1 #(.size(32)) Mux0( // Modify N, which is the total length of input/output
-    .data0_i(ID_pc2),           // 
-    .data1_i(MEM_Jump_addr),    // jump
-    .data2_i(MEM_pc3),          // beq
-    .data3_i(MEM_ReadData1),    // jr
-    .select_i(MEM_PCsrc),
+MUX_2to1 #(.size(32)) Mux0(
+    .data0_i(IF_pc2),           // nothing
+    .data1_i(MEM_pc3),          // branch
+    .select_i(MEM_Branch_2),
     .data_o(IF_pc4)
 );
 
 ProgramCounter PC(
     .clk_i(clk_i),
 	.rst_i(rst_i),
+    .pc_write(IF_pcwrite),
 	.pc_in_i(IF_pc4),
 	.pc_out_o(IF_pc1)
 );
@@ -181,6 +166,8 @@ Adder Add_pc(
 Pipe_Reg #(.size(64)) IF_ID(
     .clk_i(clk_i),
     .rst_i(rst_i),
+    .flush(B_Flush),
+    .write(IF_pcwrite),
     .data_i({
         IF_pc2,
         IF_ins
@@ -196,7 +183,7 @@ Pipe_Reg #(.size(64)) IF_ID(
 
 Decoder Control(
     .instr_i(ID_ins),
-	.PCsrc_o(ID_PCsrc),
+	.Branch_o(ID_Branch),
 	.MemtoReg_o(ID_MemtoReg),
 	.Read1_o(ID_ReadAddr1),
 	.Read2_o(ID_ReadAddr2),
@@ -225,49 +212,46 @@ Sign_Extend SE(
     .data_o(ID_Extended)
 );
 
-Shift_Left_Two_32 JShifter(
-    .data_i({6'd0, ID_ins[25:0]}),
-    .data_o(ID_JShifted)
-);
-
-Pipe_Reg #(.size(179)) ID_EX(
+Pipe_Reg #(.size(161)) ID_EX(
     .clk_i(clk_i),
     .rst_i(rst_i),
+    .flush(B_Flush || ID_Flush),
+    .write(1'b1),
     .data_i({
-        ID_pc2,
-        ID_PCsrc,
-        ID_MemtoReg,
-        ID_ALUCtrl,
-        ID_ALUsrc,
-        ID_PCsrc,
-        ID_Extended,
-        ID_Mem_Read,
-        ID_Mem_Write,
-        ID_RegWrite,
-        ID_Write_addr,
-        ID_pc2[31:28],
-        ID_JShifted[27:0],
+        ID_ins[31:26],      // 6
+        ID_pc2,             // 32
+        ID_Branch,          // 2
+        ID_MemtoReg,        // 2
+        ID_ALUCtrl,         // 2
+        ID_ALUsrc,          // 4
+        ID_Extended,        // 32
+        ID_Mem_Read,        // 1
+        ID_Mem_Write,       // 1
+        ID_RegWrite,        // 1
+        ID_Write_addr,      // 5
         ID_ReadData1,
-        ID_ReadData2
+        ID_ReadData2,
+        ID_ReadAddr1,
+        ID_ReadAddr2
     }),
     .data_o({
-        EX_pc2,         // 32
-        EX_PCsrc,       // 2
-        EX_MemtoReg,    // 2
-        EX_ALUCtrl,     // 4
-        EX_ALUsrc,      // 1
-        EX_PCsrc,       // 2
-        EX_Extended,   // 32
-        EX_Mem_Read,    // 1
-        EX_Mem_Write,   // 1
-        EX_RegWrite,    // 1
-        EX_Write_addr,  // 5
-        EX_JShifted,    // 32
-        EX_ReadData1,   // 32
-        EX_ReadData2    // 32
+        EX_op,              // 6
+        EX_pc2,             // 32
+        EX_Branch,          // 2
+        EX_MemtoReg,        // 2
+        EX_ALUCtrl,         // 4
+        EX_ALUsrc,          // 1
+        EX_Extended,        // 32
+        EX_Mem_Read,        // 1
+        EX_Mem_Write,       // 1
+        EX_RegWrite,        // 1
+        EX_Write_addr,      // 5
+        EX_ReadData1_1,     // 32
+        EX_ReadData2_1,     // 32
+        EX_ReadAddr1,
+        EX_ReadAddr2
     })
 );
-
 
 //Instantiate the components in EX stage
 
@@ -282,57 +266,74 @@ Adder Add_pc_branch(
     .sum_o(EX_pc3)
 );
 
+MUX_4to1 #(.size(32)) MuxRs(
+    .data0_i(EX_ReadData1_1),
+    .data1_i(MEM_ALU_result),
+    .data2_i(WB_Reg_write_data),
+    .select_i(EX_muxrs),
+    .data_o(EX_ReadData1_2)
+);
+
+MUX_4to1 #(.size(32)) MuxRt(
+    .data0_i(EX_ReadData2_1),
+    .data1_i(MEM_ALU_result),
+    .data2_i(WB_Reg_write_data),
+    .select_i(EX_muxrt),
+    .data_o(EX_ReadData2_2)
+);
+
 MUX_2to1 #(.size(32)) MuxALUsrc(
-    .data0_i(EX_ReadData2),
+    .data0_i(EX_ReadData2_2),
     .data1_i(EX_Extended),
     .select_i(EX_ALUsrc),
-    .data_o(EX_src2)
+    .data_o(EX_ReadData2_3)
 );
 
 ALU ALU(
-    .src1_i(EX_ReadData1),
-	.src2_i(EX_src2),
+    .src1_i(EX_ReadData1_2),
+	.src2_i(EX_ReadData2_3),
 	.ctrl_i(EX_ALUCtrl),
 	.result_o(EX_ALU_result),
-	.zero_o(EX_ALU_zero)
+	.zero_o(EX_ALU_zero),
+    .pos_o(EX_ALU_pos)
 );
 
-Pipe_Reg #(.size(236)) EX_MEM(
+Pipe_Reg #(.size(148)) EX_MEM(
     .clk_i(clk_i),
     .rst_i(rst_i),
-    .data_i({   // 173
-        EX_PCsrc[1],    // 1
-        (EX_PCsrc[0] & EX_ALU_zero | EX_PCsrc[1] & EX_PCsrc[0]),  // 1
+    .flush(B_Flush),
+    .write(1'b1),
+    .data_i({
+        EX_op,          // 6
+        EX_Branch,      // 3
         EX_pc2,         // 32
         EX_pc3,         // 32
         EX_ALU_result,  // 32
-        EX_MemtoReg,    // 2
+        EX_ALU_zero,    // 1
+        EX_ALU_pos,     // 1
+        EX_MemtoReg,    // 1
         EX_RegWrite,    // 1
         EX_Write_addr,  // 5
-        EX_ReadData1,   // 32
-        EX_ReadData2,  // 32
+        EX_ReadData2_2, // 32
         EX_Mem_Read,    // 1
-        EX_Mem_Write,   // 1
-        EX_JShifted,    // 32
-        EX_BShifted
+        EX_Mem_Write    // 1
     }),
-    .data_o({   // 204
-        MEM_PCsrc,      // 2
+    .data_o({
+        MEM_op,         // 6
+        MEM_Branch,     // 3
         MEM_pc2,        // 32
         MEM_pc3,        // 32
         MEM_ALU_result, // 32
-        MEM_MemtoReg,   // 2
+        MEM_ALU_zero,   // 1
+        MEM_ALU_pos,    // 1
+        MEM_MemtoReg,   // 1
         MEM_RegWrite,   // 1
         MEM_Write_addr, // 5
-        MEM_ReadData1,  // 32
         MEM_Read_Data2, // 32
         MEM_Mem_Read,   // 1
-        MEM_Mem_Write,  // 1
-        MEM_Jump_addr,  // 32
-        MEM_BShifted    // 32
+        MEM_Mem_Write   // 1
     })
 );
-
 
 //Instantiate the components in MEM stage
 
@@ -345,10 +346,23 @@ Data_Memory DM(
     .data_o(MEM_Mem_Data)
 );
 
-Pipe_Reg #(.size(104)) MEM_WB(
+MUX_8to1 #(.size(1)) MuxBranch(
+    .data0_i(1'b0),
+    .data1_i(MEM_ALU_zero),
+    .data2_i((~MEM_ALU_zero)),
+    .data3_i(MEM_ALU_pos),
+    .data4_i((MEM_ALU_pos || MEM_ALU_zero)),
+    .select_i(MEM_Branch),
+    .data_o(MEM_Branch_2)
+);
+
+Pipe_Reg #(.size(109)) MEM_WB(
     .clk_i(clk_i),
     .rst_i(rst_i),
+    .flush(B_Flush),
+    .write(1'b1),
     .data_i({
+        MEM_op,
         MEM_pc2,
         MEM_MemtoReg,
         MEM_RegWrite,
@@ -357,8 +371,9 @@ Pipe_Reg #(.size(104)) MEM_WB(
         MEM_ALU_result
     }),
     .data_o({
+        WB_op,          // 6
         WB_pc2,         // 32
-        WB_MemtoReg,    // 2
+        WB_MemtoReg,    // 1
         WB_RegWrite,    // 1
         WB_Write_addr,  // 5
         WB_Mem_Data,    // 21
@@ -369,11 +384,9 @@ Pipe_Reg #(.size(104)) MEM_WB(
 
 //Instantiate the components in WB stage
 
-MUX_4to1 #(.size(32)) Mux3(
+MUX_2to1 #(.size(32)) Mux3(
     .data0_i(WB_ALU_result),
     .data1_i(WB_Mem_Data),
-    .data2_i(WB_pc2),
-    // .data3_i(),
     .select_i(WB_MemtoReg),
     .data_o(WB_Reg_write_data)
 );

@@ -1,7 +1,7 @@
 // 110652011
 module Decoder(
     instr_i,
-	PCsrc_o,
+	Branch_o,
 	MemtoReg_o,
 	Read1_o,
 	Read2_o,
@@ -16,8 +16,8 @@ module Decoder(
 //I/O ports
 input	[32-1:0]	instr_i;
 
-output	[2-1:0]		PCsrc_o;
-output	[2-1:0]		MemtoReg_o;     	// MUX the data to register write.
+output	[3-1:0]		Branch_o;
+output				MemtoReg_o;     	// MUX the data to register write.
 output	[5-1:0]		Read1_o, Read2_o;	// Read register
 output	       		RegWrite_o;
 output	[5-1:0]		Write_addr_o;
@@ -27,8 +27,8 @@ output	       		Mem_Read_o;
 output	       		Mem_Write_o;
  
 //Internal Signals
-reg		[2-1:0]		PCsrc_o;
-reg		[2-1:0]		MemtoReg_o;     	// MUX the data to register write.
+reg		[3-1:0]		Branch_o;
+reg					MemtoReg_o;     	// MUX the data to register write.
 reg		[5-1:0]		Read1_o, Read2_o; 	// Read register
 reg		       		RegWrite_o;
 reg		[5-1:0]		Write_addr_o;
@@ -46,70 +46,68 @@ reg		       		Mem_Write_o;
 		case (instr_i[31:26])
 
 			0: begin			 // R-type
-				if (instr_i[5:0] === 8) begin			// jr
-					PCsrc_o    		<= 3;				// PCsrc -> jr
-					MemtoReg_o		<= 0;
-					Read1_o			<= instr_i[25:21];	// Read register[31]
-					Read2_o			<= 0;
-					RegWrite_o 		<= 0;
-					Write_addr_o	<= 0;
-					ALUCtrl_o		<= 0;
-					ALUsrc_o		<= 0;
-					Mem_Read_o		<= 0;
-					Mem_Write_o		<= 0;
-				end
-				else begin
-					PCsrc_o    		<= 0;
-					MemtoReg_o		<= 0;				// ALU_result
-					Read1_o			<= instr_i[25:21];
-					Read2_o			<= instr_i[20:16];
-					RegWrite_o 		<= 1;
-					Write_addr_o	<= instr_i[15:11];
-					ALUsrc_o		<= 0;
-					Mem_Read_o		<= 0;
-					Mem_Write_o		<= 0;
-
-					case (instr_i[5:0])
-						24:	ALUCtrl_o <= 13;	// mult
-						32: ALUCtrl_o <= 2;     // add
-						34: ALUCtrl_o <= 6;     // sub
-						36: ALUCtrl_o <= 0;     // and
-						37: ALUCtrl_o <= 1;     // or
-						38: ALUCtrl_o <= 14;	// xor
-						42: ALUCtrl_o <= 7;     // slt
-						default: ALUCtrl_o = 0; // 
-					endcase
-				end
-			end
-
-			2: begin 			 	// Jump
-				PCsrc_o    		<= 2;
-				MemtoReg_o		<= 0;
-				Read1_o			<= 0;
-				Read2_o			<= 0;
-				RegWrite_o 		<= 0;
-				Write_addr_o	<= 0;
-				ALUCtrl_o		<= 0;
+				Branch_o    	<= 0;
+				MemtoReg_o		<= 0;				// ALU_result
+				Read1_o			<= instr_i[25:21];
+				Read2_o			<= instr_i[20:16];
+				RegWrite_o 		<= 1;
+				Write_addr_o	<= instr_i[15:11];
 				ALUsrc_o		<= 0;
 				Mem_Read_o		<= 0;
 				Mem_Write_o		<= 0;
+				case (instr_i[5:0])
+					24:	ALUCtrl_o <= 13;	// mult
+					32: ALUCtrl_o <= 2;     // add
+					34: ALUCtrl_o <= 6;     // sub
+					36: ALUCtrl_o <= 0;     // and
+					37: ALUCtrl_o <= 1;     // or
+					38: ALUCtrl_o <= 14;	// xor
+					42: ALUCtrl_o <= 7;     // slt
+					default: ALUCtrl_o = 0; // 
+				endcase
 			end
 
-			3: begin			 	// jal -> write pc to Reg[31] and {pc[31:28], address<<2} to pc
-				PCsrc_o    		<= 2;
-				MemtoReg_o		<= 2;	// pc + 4
-				Read1_o			<= 0;
-				Read2_o			<= 0;
-				RegWrite_o 		<= 1;
-				Write_addr_o	<= 31;
-				ALUCtrl_o		<= 0;
+			1: begin 				// bge
+				Branch_o    	<= 4;
+				MemtoReg_o		<= 0;
+				Read1_o			<= instr_i[25:21];
+				Read2_o			<= instr_i[20:16];
+				RegWrite_o 		<= 0;
+				Write_addr_o	<= 0;
+				ALUCtrl_o		<= 6;	// sub
 				ALUsrc_o		<= 0;
 				Mem_Read_o		<= 0;
 				Mem_Write_o		<= 0;
 			end
 
 			4: begin 			 	// beq
-				PCsrc_o    		<= 1;
+				Branch_o    	<= 1;
+				MemtoReg_o		<= 0;
+				Read1_o			<= instr_i[25:21];
+				Read2_o			<= instr_i[20:16];
+				RegWrite_o 		<= 0;
+				Write_addr_o	<= 0;
+				ALUCtrl_o		<= 6;	// sub
+				ALUsrc_o		<= 0;
+				Mem_Read_o		<= 0;
+				Mem_Write_o		<= 0;
+			end
+
+			5: begin				// bne
+				Branch_o    	<= 2;
+				MemtoReg_o		<= 0;
+				Read1_o			<= instr_i[25:21];
+				Read2_o			<= instr_i[20:16];
+				RegWrite_o 		<= 0;
+				Write_addr_o	<= 0;
+				ALUCtrl_o		<= 6;	// sub
+				ALUsrc_o		<= 0;
+				Mem_Read_o		<= 0;
+				Mem_Write_o		<= 0;
+			end
+
+			7: begin				// bgt
+				Branch_o    	<= 3;
 				MemtoReg_o		<= 0;
 				Read1_o			<= instr_i[25:21];
 				Read2_o			<= instr_i[20:16];
@@ -122,7 +120,7 @@ reg		       		Mem_Write_o;
 			end
 
 			8: begin 			 	// addi
-				PCsrc_o    		<= 0;
+				Branch_o    	<= 0;
 				MemtoReg_o		<= 0;	// 
 				Read1_o			<= instr_i[25:21];
 				Read2_o			<= 0;
@@ -135,7 +133,7 @@ reg		       		Mem_Write_o;
 			end
 
 			10: begin			 	// slti
-				PCsrc_o    		<= 0;
+				Branch_o    	<= 0;
 				MemtoReg_o		<= 0;
 				Read1_o			<= instr_i[25:21];
 				Read2_o			<= 0;
@@ -148,7 +146,7 @@ reg		       		Mem_Write_o;
 			end
 
 			35: begin			 	// lw
-				PCsrc_o    		<= 0;
+				Branch_o    	<= 0;
 				MemtoReg_o		<= 1;
 				Read1_o			<= instr_i[25:21];
 				Read2_o			<= 0;
@@ -161,8 +159,8 @@ reg		       		Mem_Write_o;
 			end
 
 			43: begin			 	// sw
-				PCsrc_o    		<= 0;
-				MemtoReg_o		<= 1;
+				Branch_o    	<= 0;
+				MemtoReg_o		<= 0;
 				Read1_o			<= instr_i[25:21];
 				Read2_o			<= instr_i[20:16];
 				RegWrite_o 		<= 0;
@@ -174,7 +172,7 @@ reg		       		Mem_Write_o;
 			end
 
 			default: begin
-				PCsrc_o    		<= 0;
+				Branch_o    	<= 0;
 				MemtoReg_o		<= 0;
 				Read1_o			<= 0;
 				Read2_o			<= 0;

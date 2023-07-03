@@ -11,7 +11,7 @@
 //--------------------------------------------------------------------------------
 
 `define CYCLE_TIME 10	
-`define MAX_COUNT 65
+`define MAX_COUNT 17
 
 module TestBench;
 
@@ -37,6 +37,9 @@ initial begin
     CLK = 0;
     RST = 0;
     count = 0;
+
+    $dumpfile("testbench.vcd");
+	$dumpvars;
    
     // instruction memory
     for(i=0; i<32; i=i+1)
@@ -44,7 +47,7 @@ initial begin
         cpu.IM.instruction_file[i] = 32'b0;
     end
 
-    $readmemb("CO_P5_test_2.txt", cpu.IM.instruction_file);  //Read instruction from "CO_P4_test_1.txt"   
+    $readmemb("testbench/CO_P5_test_1.txt", cpu.IM.instruction_file);  //Read instruction from "CO_P4_test_1.txt"   
     
     // data memory
     for(i=0; i<128; i=i+1)
@@ -53,18 +56,18 @@ initial begin
     end
     
     #(`CYCLE_TIME)      RST = 1;
-    #(`CYCLE_TIME*`MAX_COUNT)   $stop;
+    #(`CYCLE_TIME*`MAX_COUNT)   $finish;
     //#(`CYCLE_TIME*20)	$fclose(handle); $stop;
 end
 
 //Print result to "CO_P4_Result.dat"
 always@(posedge CLK) begin
     
-
+    if (count == `MAX_COUNT) begin
     //print result to transcript 
-	$display("################################## clk_count =%-3d#####################################",count);
+	$display("################################## clk_count =%-3d %d #####################################",count, cpu.PC.pc_out_o);
     $display("=======================================Register=======================================");
-	
+	// $display("################## clk_count =%-3d %d ##################",count, cpu.PC.pc_out_o);
     $display("r0 =%-5d, r1 =%-5d, r2 =%-5d, r3 =%-5d, r4 =%-5d, r5 =%-5d, r6 =%-5d, r7 =%-5d\n",
     cpu.RF.Reg_File[0], cpu.RF.Reg_File[1], cpu.RF.Reg_File[2], cpu.RF.Reg_File[3], cpu.RF.Reg_File[4], 
     cpu.RF.Reg_File[5], cpu.RF.Reg_File[6], cpu.RF.Reg_File[7],
@@ -82,6 +85,8 @@ always@(posedge CLK) begin
     cpu.RF.Reg_File[29], cpu.RF.Reg_File[30], cpu.RF.Reg_File[31]
     );
 
+    
+
     $display("========================================Memory========================================");
     $display("m0 =%-5d, m1 =%-5d, m2 =%-5d, m3 =%-5d, m4 =%-5d, m5 =%-5d, m6 =%-5d, m7 =%-5d\n\nm8 =%-5d, m9 =%-5d, m10=%-5d, m11=%-5d, m12=%-5d, m13=%-5d, m14=%-5d, m15=%-5d\n\nm16=%-5d, m17=%-5d, m18=%-5d, m19=%-5d, m20=%-5d, m21=%-5d, m22=%-5d, m23=%-5d\n\nm24=%-5d, m25=%-5d, m26=%-5d, m27=%-5d, m28=%-5d, m29=%-5d, m30=%-5d, m31=%-5d\n",							 
             cpu.DM.memory[0], cpu.DM.memory[1], cpu.DM.memory[2], cpu.DM.memory[3],
@@ -93,6 +98,15 @@ always@(posedge CLK) begin
             cpu.DM.memory[24], cpu.DM.memory[25], cpu.DM.memory[26], cpu.DM.memory[27],
             cpu.DM.memory[28], cpu.DM.memory[29], cpu.DM.memory[30], cpu.DM.memory[31]
             );
+    
+    end
+
+    // $display("r2 =%-5d, r3 =%-5d, r5 =%-5d, r8 =%-5d \n",
+    // cpu.RF.Reg_File[2], cpu.RF.Reg_File[3], cpu.RF.Reg_File[5], cpu.RF.Reg_File[8]
+    // );
+    // $display("m0 =%-5d, m1 =%-5d, m2 =%-5d, m3 =%-5d \n",							 
+    //         cpu.DM.memory[0], cpu.DM.memory[1], cpu.DM.memory[2], cpu.DM.memory[3]
+    //         );
 	count = count + 1;
 end
   

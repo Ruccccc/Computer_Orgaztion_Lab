@@ -4,7 +4,8 @@ module ALU(
 	src2_i,
 	ctrl_i,
 	result_o,
-	zero_o
+	zero_o,
+	pos_o
 	);
      
 //I/O ports
@@ -14,16 +15,19 @@ input  [4-1:0]   ctrl_i;
 
 output [32-1:0]	 result_o;
 output           zero_o;
+output 			 pos_o;
 
 //Internal signals
 reg    [32-1:0]  result_o;
 wire             zero_o;
+wire			 pos_o;
 
 //Parameter
 
 //Main function
 
 	assign zero_o = (result_o == 0);
+	assign pos_o = !(result_o[31]) & result_o != 0;
 	always @(*) begin
 		case (ctrl_i)
 			0:	result_o <= src1_i & src2_i;			// and
